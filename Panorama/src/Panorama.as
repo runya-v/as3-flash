@@ -29,7 +29,7 @@ package {
 	 * @author Velichko R.N.; email:rostislav.vel@gmail.com; (c) 2.2013
 	 */
 	[SWF(width="920", height="500", frameRate="30", backgroundColor="#000000")]
-	public class ExpoNet extends Sprite {
+	public class Panorama extends Sprite {
 		[Embed(source='../preloader.swf', symbol='loader')]
 		private var preloader:Class;
 		
@@ -106,8 +106,7 @@ package {
 			
 			cam_control_ = new CameraController(this);
 			cam_control_.addEventListener(CameraController.CAMERA_UPDATET, onCameraMove);
-			view_ = new View3D( 
-				{ camera:cam_control_.m_cam, x:cam_x, y:cam_y, renderer:Renderer.CORRECT_Z_ORDER } );
+			view_ = new View3D( { camera:cam_control_.m_cam, x:cam_x, y:cam_y, renderer:Renderer.CORRECT_Z_ORDER } );
 			
 			this.addChild(view_);
 			

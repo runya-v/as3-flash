@@ -13,21 +13,10 @@ package {
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
-	import flash.events.TimerEvent;
-	import flash.utils.Timer;
 	
 	[SWF(width="720", height="400", frameRate="60", backgroundColor="#000000")]
 	//[SWF(frameRate="60", backgroundColor="#000000")]
 	public class PanoramaSettings extends Sprite {
-		private var m_bt_cam_up:CameraRotationButton;
-		private var m_bt_cam_down:CameraRotationButton;
-		private var m_bt_cam_left:CameraRotationButton;
-		private var m_bt_cam_right:CameraRotationButton;
-		private var m_bt_cam_up_left:CameraRotationButton;
-		private var m_bt_cam_up_right:CameraRotationButton;
-		private var m_bt_cam_down_left:CameraRotationButton;
-		private var m_bt_cam_down_right:CameraRotationButton;
-
 		private var m_bt_cam_zoom:CameraControllerButton;
 		private var m_bt_cam_focus:CameraControllerButton;
 		private var m_bt_cam_fov:CameraControllerButton;
@@ -39,18 +28,12 @@ package {
 		
 		private var m_sphere:Sphere;
 		private var m_curr_alpha:Number;
-
-		[Embed(source='../../buttons.swf', symbol='bt_cam_move')]
-		private var bt_cam_move:Class;
 		
 		[Embed(source='../../buttons.swf', symbol='bt_inc')]
 		private var bt_inc:Class;
 
 		[Embed(source='../../buttons.swf', symbol='bt_dec')]
 		private var bt_dec:Class;
-
-		[Embed(source='../../buttons.swf', symbol='bt_needle')]
-		private var bt_needle:Class;
 
 		[Embed(source="../Panorama.png")] 
 		private var SrcImage:Class;
@@ -60,15 +43,13 @@ package {
 		
 		private var m_cur_num_img:int = 0;
 		private var m_duration:uint;
-		private var m_alpha_rate:Number;
-		private var m_timer:Timer;
-		private var m_delta_time:Number;
-		private var m_rate:Number;
+        
+        private var _old_mouse_x:Number = 0;
+        private var _old_mouse_y:Number = 0;
 
 		public function PanoramaSettings() {
 			// create a basic camera
 			m_cam = new HoverCamera3D();
-			//m_cam.z = -500; // make sure it's positioned away from the default 0,0,0 coordinate
 			m_cam.zoom = 8;
 			m_cam.focus = 50;
 			m_cam.panAngle = 0;
@@ -96,11 +77,42 @@ package {
 			initCameraButtons();
 
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
+            
+            this.addEventListener(MouseEvent.MOUSE_MOVE, function(e:MouseEvent):void {
+                if (_old_mouse_x == 0) {
+                    _old_mouse_x = e.stageX;
+                }
 
-			m_rate = 10;
-			m_delta_time = 0.5;
-			m_alpha_rate = 1.0 / m_rate;
-			m_curr_alpha = -m_alpha_rate;
+                if (_old_mouse_y == 0) {
+                    _old_mouse_y = e.stageY;
+                }
+                
+                var shift_x:Number = e.stageX - _old_mouse_x;
+                var shift_y:Number = e.stageY - _old_mouse_y;
+
+                if (shift_x < 0) {
+                    m_cam.moveRight(-shift_x);
+                    m_cam.panAngle += shift_x;
+                }
+                
+                if (shift_x > 0) {
+                    m_cam.moveLeft(shift_x);
+                    m_cam.panAngle += shift_x;
+                }
+                
+                if (shift_y < 0) {
+                    m_cam.moveDown(-shift_y);
+                    m_cam.tiltAngle += shift_y
+                }
+                
+                if (shift_y > 0) {
+                    m_cam.moveUp(shift_y);
+                    m_cam.tiltAngle += shift_y;
+                }
+                
+                _old_mouse_x = e.stageX;
+                _old_mouse_y = e.stageY;
+            });
 		}
 
 		public function get_sphere_radius():int {
@@ -110,20 +122,6 @@ package {
 		public function set_sphere_radius(s:int):void {
 			m_sphere.radius = s;
 		}
-
-		public function onTick(event:TimerEvent):void {
-			m_material.alpha += m_curr_alpha;
-		} 
-		
-		public function onTimerComplete(event:TimerEvent):void {
-			if (m_material.alpha < .1) {
-				m_curr_alpha = -m_alpha_rate;
-			}
-			else if (m_material.alpha > .9) {
-				m_curr_alpha = m_alpha_rate;
-			}
-			onTick(null);
-		} 
 
 		private function nextImage(e:MouseEvent):void {
 			if (m_cur_num_img < 3) {
@@ -158,48 +156,16 @@ package {
 			var two_pos:int = 22;
 			var cam_y:uint = m_cam_y + 155;
 			
-			m_bt_cam_up = new CameraRotationButton(
-				this, new bt_cam_move(), m_cam, scale, m_cam_x, cam_y - one_pos, 0, -move);
-			m_bt_cam_down = new CameraRotationButton(
-				this, new bt_cam_move(), m_cam, scale, m_cam_x, cam_y + one_pos, 0, move);
-			m_bt_cam_left = new CameraRotationButton(
-				this, new bt_cam_move(), m_cam, scale, m_cam_x - one_pos, cam_y, -move, 0);
-			m_bt_cam_right = new CameraRotationButton(
-				this, new bt_cam_move(), m_cam, scale, m_cam_x + one_pos, cam_y, move, 0);
-			m_bt_cam_up_left = new CameraRotationButton(
-				this, new bt_cam_move(), m_cam, scale, m_cam_x - two_pos, cam_y - two_pos, -move, -move);
-			m_bt_cam_up_right = new CameraRotationButton(
-				this, new bt_cam_move(), m_cam, scale, m_cam_x + two_pos, cam_y - two_pos, move, -move);
-			m_bt_cam_down_left = new CameraRotationButton(
-				this, new bt_cam_move(), m_cam, scale, m_cam_x - two_pos, cam_y + two_pos, -move, move);
-			m_bt_cam_down_right = new CameraRotationButton(
-				this, new bt_cam_move(), m_cam, scale, m_cam_x + two_pos, cam_y + two_pos, move, move);
-			
-			m_bt_cam_zoom = new CameraControllerButton(
-				this, new bt_inc(), new bt_dec(), m_cam, 1, scale - .03, two_pos, two_pos, 25, "zoom");
-			m_bt_cam_focus = new CameraControllerButton(
-				this, new bt_inc(), new bt_dec(), m_cam, 2, scale - .03, two_pos, two_pos*2, 25, "focus");
-			m_bt_cam_fov = new CameraControllerButton(
-				this, new bt_inc(), new bt_dec(), m_cam, 3, scale - .03, two_pos, two_pos*3, 25, "fov");
-			m_bt_cam_fov = new CameraControllerButton(
-				this, new bt_inc(), new bt_dec(), m_cam, 4, scale - .03, two_pos, two_pos*4, 25, "distance");
-			m_bt_cam_fov = new CameraControllerButton(
-				this, new bt_inc(), new bt_dec(), m_cam, 5, scale - .03, two_pos, two_pos*5, 25, "sphere radius");
+			m_bt_cam_zoom = new CameraControllerButton(this, new bt_inc(), new bt_dec(), m_cam, 1, scale - .03, two_pos, two_pos, 25, "zoom");
+			m_bt_cam_focus = new CameraControllerButton(this, new bt_inc(), new bt_dec(), m_cam, 2, scale - .03, two_pos, two_pos*2, 25, "focus");
+			m_bt_cam_fov = new CameraControllerButton(this, new bt_inc(), new bt_dec(), m_cam, 3, scale - .03, two_pos, two_pos*3, 25, "fov");
+			m_bt_cam_fov = new CameraControllerButton(this, new bt_inc(), new bt_dec(), m_cam, 4, scale - .03, two_pos, two_pos*4, 25, "distance");
+			m_bt_cam_fov = new CameraControllerButton(this, new bt_inc(), new bt_dec(), m_cam, 5, scale - .03, two_pos, two_pos*5, 25, "sphere radius");
 		}
 
 		private function onEnterFrame(e:Event):void {
-			m_bt_cam_up.updateMove();
-			m_bt_cam_down.updateMove();
-			m_bt_cam_left.updateMove();
-			m_bt_cam_right.updateMove();
-			m_bt_cam_up_left.updateMove();
-			m_bt_cam_up_right.updateMove();
-			m_bt_cam_down_left.updateMove();
-			m_bt_cam_down_right.updateMove();
-			
-			m_cam.hover();
+    		m_cam.hover();
 			m_view.render();
-			onTimerComplete(null);
 		}
 	}
 }
