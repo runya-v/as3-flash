@@ -17,6 +17,16 @@ package {
     [SWF(width="720", height="400", frameRate="60", backgroundColor="#000000")]
     //[SWF(frameRate="60", backgroundColor="#000000")]
     public class PanoramaMask extends Sprite {
+        public static const START_MASK_R:uint = 155;
+        public static const START_MASK_G:uint = 100;
+        public static const START_MASK_B:uint = 60;
+        public static const START_MASK_A:uint = 125;
+        
+        public static const START_TEXTURE_R:uint = 255;
+        public static const START_TEXTURE_G:uint = 255;
+        public static const START_TEXTURE_B:uint = 255;
+        public static const START_TEXTURE_A:uint = 125;
+                
         private var m_bt_step_:ControllerButton;
 
         private var m_bt_mask_r_:ControllerButton;
@@ -29,11 +39,7 @@ package {
         private var m_bt_tex_b_:ControllerButton;
         private var m_bt_tex_a_:ControllerButton;
         
-        private var m_bt_merge_r_:ControllerButton;
-        private var m_bt_merge_g_:ControllerButton;
-        private var m_bt_merge_b_:ControllerButton;
-        private var m_bt_merge_a_:ControllerButton;
-        
+       
         private var m_view:View3D;
         private var m_cam:HoverCamera3D;
         private var m_cam_x:uint;
@@ -56,6 +62,8 @@ package {
         private var _old_mouse_x:Number = 0;
         private var _old_mouse_y:Number = 0;
         
+        private var _is_mouse_down:Boolean = false;
+        
         public function PanoramaMask() {
             // create a basic camera
             m_cam = new HoverCamera3D();
@@ -76,15 +84,15 @@ package {
 
             m_shader = new BitmapMaterial(
                 Cast.bitmap((new MaterialShader(
-                    Number(155) / Number(255),
-                    Number(100) / Number(255),
-                    Number(60) / Number(255),
-                    Number(125) / Number(255),
+                    Number(START_MASK_R) / Number(255),
+                    Number(START_MASK_G) / Number(255),
+                    Number(START_MASK_B) / Number(255),
+                    Number(START_MASK_A) / Number(255),
                     
-                    Number(255) / Number(255),
-                    Number(255) / Number(255),
-                    Number(255) / Number(255),
-                    Number(125) / Number(255))).sprite_), 
+                    Number(START_TEXTURE_R) / Number(255),
+                    Number(START_TEXTURE_G) / Number(255),
+                    Number(START_TEXTURE_B) / Number(255),
+                    Number(START_TEXTURE_A) / Number(255))).sprite_), 
                 {smooth:true, precision:20});
             
             m_sphere = new Sphere({alpha:.1, radius:800, segmentsH:30, segmentsW:30});
@@ -97,6 +105,10 @@ package {
             initCameraButtons();
             
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
+            
+            //this.addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent):void {
+            //    _is_mouse_down
+            //});
             
             this.addEventListener(MouseEvent.MOUSE_MOVE, function(e:MouseEvent):void {
                 if (_old_mouse_x == 0) {
@@ -154,15 +166,25 @@ package {
             
             m_bt_step_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "step", 10, 50);
 
-            m_bt_mask_r_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "mask R", m_bt_mask_r_.value_, 255);
-            m_bt_mask_g_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "mask G", m_bt_mask_g_.value_, 255);
-            m_bt_mask_b_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "mask B", m_bt_mask_b_.value_, 255);
-            m_bt_mask_a_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "mask A", m_bt_mask_a_.value_, 255);
+            m_bt_mask_r_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "mask R", START_MASK_R, 255);
+            m_bt_mask_g_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "mask G", START_MASK_G, 255);
+            m_bt_mask_b_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "mask B", START_MASK_B, 255);
+            m_bt_mask_a_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "mask A", START_MASK_A, 255);
             
-            m_bt_tex_r_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "texture R", m_bt_tex_r_.value_, 255);
-            m_bt_tex_g_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "texture G", m_bt_tex_g_.value_, 255);
-            m_bt_tex_b_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "texture B", m_bt_tex_b_.value_, 255);
-            m_bt_tex_a_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "texture A", m_bt_tex_a_.value_, 255);
+            m_bt_tex_r_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "texture R", START_TEXTURE_R, 255);
+            m_bt_tex_g_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "texture G", START_TEXTURE_G, 255);
+            m_bt_tex_b_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "texture B", START_TEXTURE_B, 255);
+            m_bt_tex_a_ = new ControllerButton(this, new bt_inc(), new bt_dec(), scale - .03, two_pos, two_pos*(two_pos_shift++), 25, "texture A", START_TEXTURE_A, 255);
+            
+            m_bt_mask_r_.step_ = m_bt_step_.value_; 
+            m_bt_mask_g_.step_ = m_bt_step_.value_;
+            m_bt_mask_b_.step_ = m_bt_step_.value_;
+            m_bt_mask_a_.step_ = m_bt_step_.value_;
+            
+            m_bt_tex_r_.step_ = m_bt_step_.value_;
+            m_bt_tex_g_.step_ = m_bt_step_.value_;
+            m_bt_tex_b_.step_ = m_bt_step_.value_;
+            m_bt_tex_a_.step_ = m_bt_step_.value_;
             
             m_bt_step_.addEventListener(ControllerButton.CHANGE, function(e:Event):void {
                 m_bt_mask_r_.step_ = m_bt_step_.value_; 
