@@ -17,7 +17,17 @@ package {
 	[SWF(width="720", height="400", frameRate="60", backgroundColor="#000000")]
 	//[SWF(frameRate="60", backgroundColor="#000000")]
 	public class PanoramaSettings extends Sprite {
-		private var m_bt_cam_zoom:CameraControllerButton;
+        [Embed(source='../../buttons.swf', symbol='bt_inc')]
+        private var bt_inc:Class;
+        
+        [Embed(source='../../buttons.swf', symbol='bt_dec')]
+        private var bt_dec:Class;
+        
+        [Embed(source="../Panorama.png")] 
+        private var SrcImage:Class;
+        private var m_image:Bitmap = new SrcImage();
+
+        private var m_bt_cam_zoom:CameraControllerButton;
 		private var m_bt_cam_focus:CameraControllerButton;
 		private var m_bt_cam_fov:CameraControllerButton;
 		
@@ -28,16 +38,6 @@ package {
 		
 		private var m_sphere:Sphere;
 		private var m_curr_alpha:Number;
-		
-		[Embed(source='../../buttons.swf', symbol='bt_inc')]
-		private var bt_inc:Class;
-
-		[Embed(source='../../buttons.swf', symbol='bt_dec')]
-		private var bt_dec:Class;
-
-		[Embed(source="../Panorama.png")] 
-		private var SrcImage:Class;
-		private var m_image:Bitmap = new SrcImage();
 		
 		private var m_material:BitmapMaterial;
 		
