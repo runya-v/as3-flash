@@ -123,32 +123,6 @@ package {
 			m_sphere.radius = s;
 		}
 
-		private function nextImage(e:MouseEvent):void {
-			if (m_cur_num_img < 3) {
-				m_cur_num_img++;
-			}
-			else {
-				m_cur_num_img = 0;
-			}
-			
-			switch (m_cur_num_img) {
-				case 0: m_sphere.material = m_material; break;
-			}
-		}
-
-		public function nextMaterial():void {
-			if (m_cur_num_img < 3) {
-				m_cur_num_img++;
-			}
-			else {
-				m_cur_num_img = 0;
-			}
-			
-			switch (m_cur_num_img) {
-				case 0: m_sphere.material = m_material; break;
-			}
-		}
-
 		private function initCameraButtons():void {
 			var scale:Number = 0.2;
 			var move:Number = 1;
