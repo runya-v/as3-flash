@@ -95,7 +95,7 @@ package {
                     Number(START_TEXTURE_A) / Number(255))).sprite_), 
                 {smooth:true, precision:20});
             
-            m_sphere = new Sphere({alpha:.1, radius:800, segmentsH:30, segmentsW:30});
+            m_sphere = new Sphere({alpha:.1, radius:1000, segmentsH:28, segmentsW:28});
             m_sphere.material = m_shader
             m_sphere.scaleX = -1;
             
