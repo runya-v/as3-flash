@@ -14,7 +14,7 @@ package {
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	
-	[SWF(width="720", height="400", frameRate="60", backgroundColor="#000000")]
+	[SWF(width="600", height="800", frameRate="60", backgroundColor="#000000")]
 	//[SWF(frameRate="60", backgroundColor="#000000")]
 	public class PanoramaSettings extends Sprite {
         [Embed(source='../../buttons.swf', symbol='bt_inc')]
@@ -23,7 +23,7 @@ package {
         [Embed(source='../../buttons.swf', symbol='bt_dec')]
         private var bt_dec:Class;
         
-        [Embed(source="../Panorama.png")] 
+        [Embed(source="../Close_door.png")] 
         private var SrcImage:Class;
         private var m_image:Bitmap = new SrcImage();
 

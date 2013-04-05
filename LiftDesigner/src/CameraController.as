@@ -10,9 +10,15 @@ package {
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.MouseEvent;
+	import flash.events.TimerEvent;
 	import flash.geom.Vector3D;
 	import flash.ui.Mouse;
 	import flash.ui.MouseCursor;
+	import flash.utils.Timer;
+	
+	import flashx.textLayout.tlf_internal;
+	
+	import org.osmf.events.TimeEvent;
 	
 	/**
 	 * @author Velichko R.N.; email:rostislav.vel@gmail.com; (c) 12.2010
@@ -39,13 +45,15 @@ package {
 		public static const BUTTON_SHIFT_X:Number = 100;
 		public static const BUTTON_SHIFT_Y:Number = 70;
 
+        public static const AUTO_ROTATION_X:Number = 0.15;
+        public static const AUTO_ROTATION_Y:Number = 0.08;
 		public static const ROTATION_X:Number = 40;
 		public static const ROTATION_Y:Number = 15;
 
 		public static const ASPECT_SLIDE_HEIGHT:Number = 100;
 		public static const ASPECT_SHIFT_Y:Number = 70;
-		public static const MAX_ZOOM:Number = 18;
-		public static const MIN_ZOOM:Number = 4;
+		public static const MAX_ZOOM:Number = 16;
+		public static const MIN_ZOOM:Number = 3;
 
 		public var _cam:HoverCamera3D;
 
@@ -69,7 +77,7 @@ package {
 		private var _aspect_plus_back:MovieClip;
 		private var _aspect_minus_back:MovieClip;		
 
-		private var old_nor_aspect_:Number;		
+		private var _old_nor_aspect:Number;		
 		
 		private var _is_init:Boolean = false;
 		private var _sprite:Sprite;
@@ -81,6 +89,10 @@ package {
 		private var _is_slide:Boolean = false;
 		private var _is_slide_plus:Boolean = false;
 		private var _is_slide_minus:Boolean = false;
+        
+        private var _auto_move_timer:Timer;
+        private var _stop_move_timer:Timer;
+        private var _is_stop_move_timer:Boolean = false;
 		
 		public function CameraController(sprite:Sprite, camera:HoverCamera3D, dw:int = 0, dh:int = 0):void {
             _dw = dw;
@@ -88,16 +100,42 @@ package {
 			_sprite = sprite;
 			
             _cam = camera;
+            _cam.hover(true);
 			_cam.zoom         = 8;
 			_cam.focus        = 50;
 			_cam.panAngle     = 0;
-			_cam.tiltAngle    = 0;
+			_cam.tiltAngle    = 3;
 			_cam.minTiltAngle = -90;
 			_cam.distance     = 0.5;
-			_cam.hover(true);
             
 			_old_cam_Y = _cam.rotationY;
 			_cam.zoom = (MAX_ZOOM - MIN_ZOOM) / 2;
+            
+            _stop_move_timer = new Timer(3000, 1);
+            _stop_move_timer.addEventListener(TimerEvent.TIMER_COMPLETE, function(e:TimerEvent):void {
+                _is_stop_move_timer = false;
+            });
+            
+            _auto_move_timer = new Timer(5, 1);
+            _auto_move_timer.addEventListener(TimerEvent.TIMER_COMPLETE, function(e:TimerEvent):void {
+                _cam.hover(false);
+
+                if ( ! _is_stop_move_timer) {
+                    if (_cam.tiltAngle < 0) {
+                        _cam.tiltAngle += AUTO_ROTATION_Y;
+                    }
+                    
+                    if (_cam.tiltAngle > 0) {
+                        _cam.tiltAngle -= AUTO_ROTATION_Y;
+                    }
+                    
+                    if ( ! _is_rotate) {
+                        _cam.panAngle -= AUTO_ROTATION_X;
+                    }
+                }
+                _auto_move_timer.start();
+            });
+            _auto_move_timer.start();
 		}
 		
 		public function init(x:int, y:int):void {
@@ -211,27 +249,27 @@ package {
 			_aspect_minus_back.x = _aspect_minus.x;
 			_aspect_minus_back.y = _aspect_minus.y; 
 			
-			_aspect_back.addEventListener(MouseEvent.MOUSE_OVER, on_aspect_back_over);
-			_aspect_back.addEventListener(MouseEvent.MOUSE_OUT,  on_aspect_back_out);
-			_aspect_back.addEventListener(MouseEvent.MOUSE_MOVE, on_aspect_back_move);
-			_aspect_back.addEventListener(MouseEvent.MOUSE_UP,   on_aspect_backUp);
-			_aspect_back.addEventListener(MouseEvent.MOUSE_DOWN, on_aspect_backDown);
+			_aspect_back.addEventListener(MouseEvent.MOUSE_OVER, onAspectBackOver);
+			_aspect_back.addEventListener(MouseEvent.MOUSE_OUT,  onAspectBackOut);
+			_aspect_back.addEventListener(MouseEvent.MOUSE_MOVE, onAspectBackMove);
+			_aspect_back.addEventListener(MouseEvent.MOUSE_UP,   onAspectBackUp);
+			_aspect_back.addEventListener(MouseEvent.MOUSE_DOWN, onAspectBackDown);
 
-			_aspect_slide.addEventListener(MouseEvent.MOUSE_OVER, on_aspect_slide_over);
-			_aspect_slide.addEventListener(MouseEvent.MOUSE_OUT,  on_aspect_slide_out);
-			_aspect_slide.addEventListener(MouseEvent.MOUSE_MOVE, on_aspect_slide_move);
-			_aspect_slide.addEventListener(MouseEvent.MOUSE_UP,   on_aspect_slideUp);
-			_aspect_slide.addEventListener(MouseEvent.MOUSE_DOWN, on_aspect_slideDown);
+			_aspect_slide.addEventListener(MouseEvent.MOUSE_OVER, onAspectSlideOver);
+			_aspect_slide.addEventListener(MouseEvent.MOUSE_OUT,  onAspectSlideOut);
+			_aspect_slide.addEventListener(MouseEvent.MOUSE_MOVE, onAspectSlideMove);
+			_aspect_slide.addEventListener(MouseEvent.MOUSE_UP,   onAspectSlideUp);
+			_aspect_slide.addEventListener(MouseEvent.MOUSE_DOWN, onAspectSlideDown);
 
-			_aspect_plus.addEventListener(MouseEvent.MOUSE_OVER, on_aspect_plus_over);
-			_aspect_plus.addEventListener(MouseEvent.MOUSE_OUT,  on_aspect_plus_out);
-			_aspect_plus.addEventListener(MouseEvent.MOUSE_UP,   on_aspect_plusUp);
-			_aspect_plus.addEventListener(MouseEvent.MOUSE_DOWN, on_aspect_plusDown);
+			_aspect_plus.addEventListener(MouseEvent.MOUSE_OVER, onAspectPlusOver);
+			_aspect_plus.addEventListener(MouseEvent.MOUSE_OUT,  onAspectPlusOut);
+			_aspect_plus.addEventListener(MouseEvent.MOUSE_UP,   onAspectPlusUp);
+			_aspect_plus.addEventListener(MouseEvent.MOUSE_DOWN, onAspectPlusDown);
 
-			_aspect_minus.addEventListener(MouseEvent.MOUSE_OVER, on_aspect_minus_over);		
-			_aspect_minus.addEventListener(MouseEvent.MOUSE_OUT,  on_aspect_minus_out);		
-			_aspect_minus.addEventListener(MouseEvent.MOUSE_UP,   on_aspect_minusUp);		
-			_aspect_minus.addEventListener(MouseEvent.MOUSE_DOWN, on_aspect_minusDown);		
+			_aspect_minus.addEventListener(MouseEvent.MOUSE_OVER, onAspectMinusOver);		
+			_aspect_minus.addEventListener(MouseEvent.MOUSE_OUT,  onAspectMinusOut);		
+			_aspect_minus.addEventListener(MouseEvent.MOUSE_UP,   onAspectMinusUp);		
+			_aspect_minus.addEventListener(MouseEvent.MOUSE_DOWN, onAspectMinusDown);		
 
 			_sprite.addChild(_aspect_back);
 			_sprite.addChild(_aspect_slide_back);
@@ -242,18 +280,18 @@ package {
 			_sprite.addChild(_aspect_minus);
 		}
 
-		private function on_aspect_back_over(e:MouseEvent):void {
+		private function onAspectBackOver(e:MouseEvent):void {
 			Mouse.cursor = MouseCursor.BUTTON;	
 			_aspect_back.gotoAndStop(5);
 		}
 		
-		private function on_aspect_back_out(e:MouseEvent):void {
+		private function onAspectBackOut(e:MouseEvent):void {
 			Mouse.cursor = MouseCursor.AUTO;	
 			_is_back_slide = false;
 			_aspect_back.gotoAndStop(4);
 		}
 		
-		private function on_aspect_back_move(e:MouseEvent):void {
+		private function onAspectBackMove(e:MouseEvent):void {
 			if (_is_slide) {
 				var h:Number = BUTTON_SHIFT_Y + ASPECT_SLIDE_HEIGHT + ASPECT_SHIFT_Y;
 				
@@ -268,13 +306,14 @@ package {
 				}
 				_aspect_slide_back.y = _aspect_slide.y;
 			}
+            update();
 		}
 		
-		private function on_aspect_backUp(e:MouseEvent):void {
+		private function onAspectBackUp(e:MouseEvent):void {
 			_is_back_slide = false;
 		}
 		
-		private function on_aspect_backDown(e:MouseEvent):void {
+		private function onAspectBackDown(e:MouseEvent):void {
 			_is_back_slide = true;
 
 			var h:Number = BUTTON_SHIFT_Y + ASPECT_SLIDE_HEIGHT + ASPECT_SHIFT_Y;
@@ -291,18 +330,18 @@ package {
 			_aspect_slide_back.y = _aspect_slide.y;
 		}
 
-		private function on_aspect_slide_over(e:MouseEvent):void {
+		private function onAspectSlideOver(e:MouseEvent):void {
 			Mouse.cursor = MouseCursor.HAND;
 			_aspect_slide.gotoAndStop(2);
 		}
 
-		private function on_aspect_slide_out(e:MouseEvent):void {
+		private function onAspectSlideOut(e:MouseEvent):void {
 			Mouse.cursor = MouseCursor.AUTO;	
 			_aspect_slide.gotoAndStop(1);
 			_is_slide = false;
 		}
 
-		private function on_aspect_slide_move(e:MouseEvent):void {
+		private function onAspectSlideMove(e:MouseEvent):void {
 			if (_is_slide) {
 				var h:Number = BUTTON_SHIFT_Y + ASPECT_SLIDE_HEIGHT + ASPECT_SHIFT_Y;
 				
@@ -317,54 +356,55 @@ package {
 				}
 				_aspect_slide_back.y = _aspect_slide.y;
 			}			
+            update();
 		}
 		
-		private function on_aspect_slideUp(e:MouseEvent):void {
+		private function onAspectSlideUp(e:MouseEvent):void {
 			_is_slide = false;
 			_aspect_slide.gotoAndStop(1);
 		}
 
-		private function on_aspect_slideDown(e:MouseEvent):void {
+		private function onAspectSlideDown(e:MouseEvent):void {
 			_is_slide = true;
 			_aspect_slide.gotoAndStop(3);
 		}
 		
-		private function on_aspect_plus_over(e:MouseEvent):void {
+		private function onAspectPlusOver(e:MouseEvent):void {
 			Mouse.cursor = MouseCursor.BUTTON;	
 			_aspect_plus.gotoAndStop(2);	
 		}
 
-		private function on_aspect_plus_out(e:MouseEvent):void {
+		private function onAspectPlusOut(e:MouseEvent):void {
 			Mouse.cursor = MouseCursor.AUTO;	
 			_aspect_plus.gotoAndStop(1);	
 		}
 
-		private function on_aspect_plusUp(e:MouseEvent):void {
+		private function onAspectPlusUp(e:MouseEvent):void {
 			_aspect_plus.gotoAndStop(1);
 			_is_slide_plus = false;
 		}
 
-		private function on_aspect_plusDown(e:MouseEvent):void {
+		private function onAspectPlusDown(e:MouseEvent):void {
 			_aspect_plus.gotoAndStop(3);	
 			_is_slide_plus = true;
 		}
 		
-		private function on_aspect_minus_over(e:MouseEvent):void {
+		private function onAspectMinusOver(e:MouseEvent):void {
 			Mouse.cursor = MouseCursor.BUTTON;	
 			_aspect_minus.gotoAndStop(2);	
 		}	
 
-		private function on_aspect_minus_out(e:MouseEvent):void {
+		private function onAspectMinusOut(e:MouseEvent):void {
 			Mouse.cursor = MouseCursor.AUTO;	
 			_aspect_minus.gotoAndStop(1);	
 		}		
 
-		private function on_aspect_minusUp(e:MouseEvent):void {
+		private function onAspectMinusUp(e:MouseEvent):void {
 			_aspect_minus.gotoAndStop(1);	
 			_is_slide_minus = false;
 		}		
 		
-		private function on_aspect_minusDown(e:MouseEvent):void {
+		private function onAspectMinusDown(e:MouseEvent):void {
 			_aspect_minus.gotoAndStop(3);	
 			_is_slide_minus = true;
 		}		
@@ -426,24 +466,36 @@ package {
 		}
 		
 		private function onUpUp(e:MouseEvent):void {
+            _stop_move_timer.start();
+            _is_stop_move_timer = true;
+            _cam.hover(true);
 			_cam.moveDown(-ROTATION_Y);
 			_cam.tiltAngle -= ROTATION_Y;
 			_up.gotoAndStop(4);
 		}
 		
 		private function onRightUp(e:MouseEvent):void {
+            _stop_move_timer.start();
+            _is_stop_move_timer = true;
+            _cam.hover(true);
 			_cam.moveRight(ROTATION_X);
 			_cam.panAngle += ROTATION_X;
 			_right.gotoAndStop(7);
 		}
 		
 		private function onDownUp(e:MouseEvent):void {
+            _stop_move_timer.start();
+            _is_stop_move_timer = true;
+            _cam.hover(true);
 			_cam.moveDown(ROTATION_Y);
 			_cam.tiltAngle += ROTATION_Y;
 			_down.gotoAndStop(10);
 		}
 		
 		private function onLeftUp(e:MouseEvent):void {
+            _stop_move_timer.start();
+            _is_stop_move_timer = true;
+            _cam.hover(true);
 			_cam.moveRight(-ROTATION_X);
 			_cam.panAngle -= ROTATION_X;
 			_left.gotoAndStop(13);
