@@ -26,12 +26,6 @@ package {
     [SWF(width="540", height="720", frameRate="60", backgroundColor="#000000")]
     //[SWF(frameRate="60", backgroundColor="#000000")]
     public class LiftDesigner extends Sprite {
-        [Embed(source='../../buttons.swf', symbol='bt_inc')]
-        private var bt_inc:Class;
-        
-        [Embed(source='../../buttons.swf', symbol='bt_dec')]
-        private var bt_dec:Class;
-        
         [Embed(source="../Scene.png")] 
         private var BackImage:Class;
         private var _back_image:Bitmap = new BackImage();
@@ -44,7 +38,7 @@ package {
         private var TextureImage:Class;
         private var _tex_image:Bitmap = new TextureImage();
         
-        private static const VERSION:String = "2.0";
+        private static const VERSION:String = "0.1";
         
         private static const BORDER:int              = 20;
         private static const COLOR_CHANGER_Y_POS:int = BORDER;
@@ -62,18 +56,6 @@ package {
         private var _bt_cons:Sprite;
         private var _console:Console;
 
-        private var _bt_step_:ControllerButton;
-        
-        private var _bt_mask_r_:ControllerButton;
-        private var _bt_mask_g_:ControllerButton;
-        private var _bt_mask_b_:ControllerButton;
-        private var _bt_mask_a_:ControllerButton;
-        
-        private var _bt_tex_r_:ControllerButton;
-        private var _bt_tex_g_:ControllerButton;
-        private var _bt_tex_b_:ControllerButton;
-        private var _bt_tex_a_:ControllerButton;
-        
         private var _view:View3D;
         private var _cam:HoverCamera3D;
         private var _cam_x:uint;
@@ -115,7 +97,7 @@ package {
             _cam.zoom         = 8;
             _cam.focus        = 50;
             _cam.panAngle     = 0;
-            _cam.tiltAngle    = 0;
+            _cam.tiltAngle    = 3;
             _cam.minTiltAngle = -90;
             _cam.distance     = 0.5;
             _cam.hover(true);
@@ -185,8 +167,6 @@ package {
             _lift_sprites.push(l5);
             
             this.addChild(_lift_changer);
-            
-            _cam_control = new CameraController(this, _cam);
             
             _color_changer = new VerticalSpritesViewer(BORDER);
             _color_changer.x = BORDER;
@@ -286,12 +266,14 @@ package {
 
             initConsole();
             
-            addEventListener(Event.ENTER_FRAME, onEnterFrame);
+            _cam_control = new CameraController(this, _cam);
             _cam_control.init((stage.stageWidth / 2), (stage.stageHeight /2));
+
+            addEventListener(Event.ENTER_FRAME, onEnterFrame);
         }
         
         private function initConsole():void {
-            _console = new Console(20, 20, 600, 300);
+            _console = new Console(20, 20, this.stage.stageWidth * 0.6, this.stage.stageHeight * 0.9);
             this.addChild(_console);
             _console.visible = false;
             
