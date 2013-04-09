@@ -32,9 +32,10 @@ package {
         private var SrcMovie:Class;
         private var _movie_mat:MovieClip = new SrcMovie;
         
-        private static const ANIMATE:String = "ANIMATE";
+        private static const ANIMATE_FORVARD:String = "ANIMATE_FORVARD";
+        private static const ANIMATE_BACK:String = "ANIMATE_BACK";
                 
-        private static const VERSION:String = "2.0";
+        private static const VERSION:String = "2.1";
         
         public static const RADIAN:Number = 57.295779513;
         
@@ -68,8 +69,7 @@ package {
         private var _width:Number;
         private var _height:Number;
         
-        private var _is_opened:Boolean = false;
-        private var _is_closed:Boolean = true;
+        private var _is_open:Boolean = false;
         
         public function Lift() {
             if (stage) {
@@ -124,27 +124,16 @@ package {
             initConsole();
 
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
-            addEventListener(ANIMATE, onOpenDoor);
         }
         
-        private function onOpenDoor(e:Event):void {
-            if (_movie_mat.currentFrame == 1) 
-            { 
-                removeEventListener(ANIMATE, onOpenDoor);
-            } 
-            else 
-            { 
+        private function openDoor():void {
+            if (_movie_mat.currentFrame != 1) { 
                 _movie_mat.prevFrame(); 
             } 
         }
 
-        private function onCloseDoor(e:Event):void {
-            if (_movie_mat.currentFrame == _movie_mat.totalFrames) 
-            { 
-                removeEventListener(ANIMATE, onCloseDoor);
-            } 
-            else 
-            { 
+        private function closeDoor():void {
+            if (_movie_mat.currentFrame != _movie_mat.totalFrames) { 
                 _movie_mat.nextFrame(); 
             } 
         }
@@ -208,18 +197,16 @@ package {
             
             if (24 > alpha) {
                 if (_movie_mat.currentFrame == _movie_mat.totalFrames) {
-                    addEventListener(ANIMATE, onOpenDoor);
                     _console.addMessage("Open Door.");
                 }
+                openDoor();
             }
             else {
                 if (_movie_mat.currentFrame == 1) {
-                    addEventListener(ANIMATE, onCloseDoor);
                     _console.addMessage("Close Door.");
                 }
+                closeDoor();
             }
-            
-            dispatchEvent(new Event(ANIMATE));
         }
     }
 }
