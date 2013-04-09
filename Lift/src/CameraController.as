@@ -45,7 +45,7 @@ package {
 		public static const BUTTON_SHIFT_X:Number = 100;
 		public static const BUTTON_SHIFT_Y:Number = 70;
 
-        public static const AUTO_ROTATION_X:Number = 0.15;
+        public static const AUTO_ROTATION_X:Number = 0.08;
         public static const AUTO_ROTATION_Y:Number = 0.08;
 		public static const ROTATION_X:Number = 40;
 		public static const ROTATION_Y:Number = 15;

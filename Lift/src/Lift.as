@@ -35,7 +35,7 @@ package {
         private static const ANIMATE_FORVARD:String = "ANIMATE_FORVARD";
         private static const ANIMATE_BACK:String = "ANIMATE_BACK";
                 
-        private static const VERSION:String = "2.1";
+        private static const VERSION:String = "2.2";
         
         public static const RADIAN:Number = 57.295779513;
         
@@ -70,7 +70,11 @@ package {
         private var _height:Number;
         
         private var _is_open:Boolean = false;
-        
+
+        private var _old_mouse_x:Number = 0;
+        private var _old_mouse_y:Number = 0;
+        private var _mouse_dovn:Boolean = false;
+
         public function Lift() {
             if (stage) {
                 stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -124,6 +128,63 @@ package {
             initConsole();
 
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
+            
+            this.addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent):void {
+                Mouse.cursor = MouseCursor.HAND;
+                _mouse_dovn = true;
+            });
+            
+            this.addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent):void {
+                Mouse.cursor = MouseCursor.AUTO;
+                _mouse_dovn = false;
+                _old_mouse_x = 0;
+                _old_mouse_y = 0;
+            });
+            
+            this.addEventListener(MouseEvent.MOUSE_OVER, function(e:MouseEvent):void {
+                Mouse.cursor = MouseCursor.AUTO;
+                _mouse_dovn = false;
+                _old_mouse_x = 0;
+                _old_mouse_y = 0;
+            });
+            
+            this.addEventListener(MouseEvent.MOUSE_MOVE, function(e:MouseEvent):void {
+                if (_mouse_dovn) {
+                    if (_old_mouse_x == 0) {
+                        _old_mouse_x = e.stageX;
+                    }
+                    
+                    if (_old_mouse_y == 0) {
+                        _old_mouse_y = e.stageY;
+                    }
+                    
+                    var shift_x:Number = e.stageX - _old_mouse_x;
+                    var shift_y:Number = e.stageY - _old_mouse_y;
+                    
+                    if (shift_x < 0) {
+                        _cam_control._cam.moveRight(-shift_x);
+                        _cam_control._cam.panAngle += shift_x;
+                    }
+                    
+                    if (shift_x > 0) {
+                        _cam_control._cam.moveLeft(shift_x);
+                        _cam_control._cam.panAngle += shift_x;
+                    }
+                    
+                    if (shift_y < 0) {
+                        _cam_control._cam.moveDown(-shift_y);
+                        _cam_control._cam.tiltAngle += shift_y
+                    }
+                    
+                    if (shift_y > 0) {
+                        _cam_control._cam.moveUp(shift_y);
+                        _cam_control._cam.tiltAngle += shift_y;
+                    }
+                    
+                    _old_mouse_x = e.stageX;
+                    _old_mouse_y = e.stageY;
+                }
+            });
         }
         
         private function openDoor():void {
