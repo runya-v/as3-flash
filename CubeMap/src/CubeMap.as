@@ -16,7 +16,7 @@ package {
     import flash.events.Event;
     import flash.events.MouseEvent;
     
-    [SWF(width="720", height="400", frameRate="60", backgroundColor="#000000")]
+    [SWF(width="600", height="800", frameRate="60", backgroundColor="#000000")]
     //[SWF(frameRate="60", backgroundColor="#000000")]
     public class CubeMap extends Sprite {
         [Embed(source="../back.png")] 
@@ -43,7 +43,7 @@ package {
         private var TopImage:Class;
         private var _top_image:Bitmap = new TopImage();
 
-        [Embed(source="../Material.png")] 
+        [Embed(source="../Cub.png")] 
         private var MaterialImage:Class;
         private var _material_bitmap:Bitmap = new MaterialImage();
         

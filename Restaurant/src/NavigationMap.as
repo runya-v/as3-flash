@@ -58,8 +58,11 @@ package {
 			bt_open_.gotoAndStop(1);
 			bt_open_.x = WIDTH - bt_open_.width / 2 - 3;
 			bt_open_.y = HEIGHT / 2;// + bt_open_.height / 2;
+            bt_open_.graphics.beginFill(0x6f6f7f, 0.6);
+            bt_open_.graphics.drawRect(-BORDER / 2, -HEIGHT / 2, BORDER, HEIGHT);
+            bt_open_.graphics.endFill();
 			
-			rect_.addEventListener(MouseEvent.MOUSE_OVER, function (e:MouseEvent):void {
+            bt_open_.addEventListener(MouseEvent.MOUSE_OVER, function (e:MouseEvent):void {
 				Mouse.cursor = MouseCursor.BUTTON;
 				
 				if ( ! is_open_) {
@@ -70,7 +73,7 @@ package {
 				}
 			})
 
-			rect_.addEventListener(MouseEvent.MOUSE_OUT, function (e:MouseEvent):void {
+            bt_open_.addEventListener(MouseEvent.MOUSE_OUT, function (e:MouseEvent):void {
 				Mouse.cursor = MouseCursor.AUTO;
 				
 				if ( ! is_open_) {
@@ -81,7 +84,7 @@ package {
 				}
 			})
 
-			rect_.addEventListener(MouseEvent.MOUSE_DOWN, function (e:MouseEvent):void {
+            bt_open_.addEventListener(MouseEvent.MOUSE_DOWN, function (e:MouseEvent):void {
 				{
 					if ( ! is_move_) {
 						is_move_ = true;
@@ -146,6 +149,7 @@ package {
 		public function addCamera(id:int):void {
 			var cam:Camera = parent_._cameras[id];
 			map_.addChildAt(cam, 0);
+            cam.draw();
 		}
 
 		public function addTransition(id:int, from:int, to:int):void {

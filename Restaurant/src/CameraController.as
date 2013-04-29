@@ -10,9 +10,11 @@ package {
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.MouseEvent;
+	import flash.events.TimerEvent;
 	import flash.geom.Vector3D;
 	import flash.ui.Mouse;
 	import flash.ui.MouseCursor;
+	import flash.utils.Timer;
 	
 	/**
 	 * @author Velichko R.N.; email:rostislav.vel@gmail.com; (c) 12.2010
@@ -37,6 +39,8 @@ package {
 		public static const BUTTON_SHIFT_X:Number = 100;
 		public static const BUTTON_SHIFT_Y:Number = 70;
 
+        public static const AUTO_ROTATION_X:Number = 0.08;
+        public static const AUTO_ROTATION_Y:Number = 0.1;
 		public static const ROTATION_X:Number = 40;
 		public static const ROTATION_Y:Number = 15;
 
@@ -45,7 +49,7 @@ package {
 		public static const MAX_ZOOM:Number = 18;
 		public static const MIN_ZOOM:Number = 4;
 
-		public var m_cam:HoverCamera3D;
+		public var _cam:HoverCamera3D;
 
 		private var m_back:MovieClip;
 		private var m_bt_back:MovieClip;
@@ -71,24 +75,41 @@ package {
 		private var m_old_cam_Y:Number;
 		private var m_old_cam_Z:Number;
 		
-		private var m_is_rotate:Boolean = false;
+		private var _is_rotate:Boolean = false;
 		private var m_is_back_slide:Boolean = false;
 		private var m_is_slide:Boolean = false;
 		private var m_is_slide_plus:Boolean = false;
 		private var m_is_slide_minus:Boolean = false;
+        
+        private var _auto_move_timer:Timer;
+        private var _stop_move_timer:Timer;
+        private var _is_stop_move_timer:Boolean = false;
 		
 		public function CameraController(sprite:Restaurant):void {
 			m_sprite = sprite;
-			m_cam = new HoverCamera3D();
-			m_cam.zoom = 8;
-			m_cam.focus = 50;
-			m_cam.panAngle = 0;
-			m_cam.tiltAngle = 0;
-			m_cam.minTiltAngle = -90;
-			m_cam.distance = 0.5;
-			m_cam.hover(true);
-			m_old_cam_Y = m_cam.rotationY;
-			m_cam.zoom = (MAX_ZOOM - MIN_ZOOM) / 2;
+			_cam = new HoverCamera3D();
+			_cam.zoom = 8;
+			_cam.focus = 50;
+			_cam.panAngle = 0;
+			_cam.tiltAngle = 0;
+			_cam.minTiltAngle = -90;
+			_cam.distance = 0.5;
+			_cam.hover(true);
+			m_old_cam_Y = _cam.rotationY;
+			_cam.zoom = (MAX_ZOOM - MIN_ZOOM) / 2;
+            
+            _auto_move_timer = new Timer(5, 1);
+            _auto_move_timer.addEventListener(TimerEvent.TIMER_COMPLETE, function(e:TimerEvent):void {
+                _cam.hover(false);
+                
+                if ( ! _is_stop_move_timer) {
+                    if ( ! _is_rotate) {
+                        //_cam.panAngle -= AUTO_ROTATION_X;
+                    }
+                }
+                _auto_move_timer.start();
+            });
+            _auto_move_timer.start();
 		}
 		
 		public function init(x:int, y:int):void {
@@ -420,8 +441,8 @@ package {
 		}
 		
 		private function on_up_up(e:MouseEvent):void {
-			m_cam.moveDown(-ROTATION_Y);
-			m_cam.tiltAngle -= ROTATION_Y;
+			_cam.moveDown(-ROTATION_Y);
+			_cam.tiltAngle -= ROTATION_Y;
 			m_up.gotoAndStop(4);
 		}
 		
@@ -429,9 +450,9 @@ package {
 			if (m_sprite._panorama._curr_gop && m_sprite._panorama._curr_gop._need_vecs.length) {
 				var max:Number = 360;
 				var camv:Vector3D = new Vector3D(
-					-Math.sin(m_cam.rotationY / GoPoint.RADIAN),
+					-Math.sin(_cam.rotationY / GoPoint.RADIAN),
 					0,
-					Math.cos(m_cam.rotationY / GoPoint.RADIAN));
+					Math.cos(_cam.rotationY / GoPoint.RADIAN));
 				camv.normalize();
 
 				for each (var v:Vector3D in m_sprite._panorama._curr_gop._need_vecs) {
@@ -452,19 +473,19 @@ package {
 						}
 					}
 				}
-				m_cam.moveRight(max);
-				m_cam.panAngle += max;
+				_cam.moveRight(max);
+				_cam.panAngle += max;
 			}
 			else {
-				m_cam.moveRight(ROTATION_X);
-				m_cam.panAngle += ROTATION_X;
+				_cam.moveRight(ROTATION_X);
+				_cam.panAngle += ROTATION_X;
 			}
 			m_right.gotoAndStop(7);
 		}
 		
 		private function on_down_up(e:MouseEvent):void {
-			m_cam.moveDown(ROTATION_Y);
-			m_cam.tiltAngle += ROTATION_Y;
+			_cam.moveDown(ROTATION_Y);
+			_cam.tiltAngle += ROTATION_Y;
 			m_down.gotoAndStop(10);
 		}
 		
@@ -472,9 +493,9 @@ package {
 			if (m_sprite._panorama._curr_gop && m_sprite._panorama._curr_gop._need_vecs.length) {
 				var max:Number = 360;
 				var camv:Vector3D = new Vector3D(
-					-Math.sin(m_cam.rotationY / GoPoint.RADIAN),
+					-Math.sin(_cam.rotationY / GoPoint.RADIAN),
 					0,
-					Math.cos(m_cam.rotationY / GoPoint.RADIAN));
+					Math.cos(_cam.rotationY / GoPoint.RADIAN));
 				camv.normalize();
 				
 				for each (var v:Vector3D in m_sprite._panorama._curr_gop._need_vecs) {
@@ -495,36 +516,36 @@ package {
 						}
 					}
 				}
-				m_cam.moveRight(-max);
-				m_cam.panAngle -= max;
+				_cam.moveRight(-max);
+				_cam.panAngle -= max;
 			}
 			else {
-				m_cam.moveRight(-ROTATION_X);
-				m_cam.panAngle -= ROTATION_X;
+				_cam.moveRight(-ROTATION_X);
+				_cam.panAngle -= ROTATION_X;
 			}
 			m_left.gotoAndStop(13);
 		}
 
 		public function rotate():void {
-			if ((m_old_cam_Y != m_cam.rotationY) && m_back && m_rotate){
-				m_old_cam_Y == m_cam.rotationY;
+			if ((m_old_cam_Y != _cam.rotationY) && m_back && m_rotate){
+				m_old_cam_Y == _cam.rotationY;
 
 				var v:Vector3D = new Vector3D(
-					-Math.sin(m_cam.rotationY / GoPoint.RADIAN), 
-					Math.cos(m_cam.rotationY / GoPoint.RADIAN));
+					-Math.sin(_cam.rotationY / GoPoint.RADIAN), 
+					Math.cos(_cam.rotationY / GoPoint.RADIAN));
 				v.normalize();
 				v.scaleBy(m_back.width / 2);
 				
 				m_rotate.x = v.x + m_back.x;
 				m_rotate.y = v.y + m_back.y;
-				m_rotate.rotationZ = m_cam.rotationY;
+				m_rotate.rotationZ = _cam.rotationY;
 				
-				m_sprite._nmap.nmap_cam_.rotationZ = m_cam.rotationY - 180; 
+				m_sprite._nmap.nmap_cam_.rotationZ = _cam.rotationY - 180; 
 			}
 		}
 
 		private function on_rotate_over(e:MouseEvent):void {
-			if ( ! m_is_rotate) {
+			if ( ! _is_rotate) {
 				m_rotate.gotoAndStop(18);
 				m_back.gotoAndStop(2);	
 				Mouse.cursor = MouseCursor.HAND;
@@ -532,7 +553,7 @@ package {
 		}
 		
 		private function on_rotate_out(e:MouseEvent):void {
-			if ( ! m_is_rotate) {
+			if ( ! _is_rotate) {
 				m_rotate.gotoAndStop(17);
 				m_back.gotoAndStop(1);
 				Mouse.cursor = MouseCursor.AUTO;
@@ -542,30 +563,30 @@ package {
 		private function on_rotate_up(e:MouseEvent):void {
 			m_rotate.gotoAndStop(17);
 			m_back.gotoAndStop(1);
-			m_is_rotate = false;
+			_is_rotate = false;
 			Mouse.cursor = MouseCursor.AUTO;
 		}
 		
 		private function on_rotate_down(e:MouseEvent):void {
 			m_back.gotoAndStop(3);
 			m_rotate.gotoAndStop(19);
-			m_is_rotate = true;
+			_is_rotate = true;
 		}
 		
 		private function on_stage_mouse_move(e:MouseEvent):void {
-			if (m_is_rotate) {
+			if (_is_rotate) {
 				var v:Vector3D = new Vector3D(e.stageX - m_back.x, e.stageY - m_back.y); 
 				v.normalize();
 				var rot:Number = Math.acos(v.dotProduct(new Vector3D(0, 1))) * GoPoint.RADIAN;
 
 				if (v.x < 0) {
 					m_rotate.rotationZ = rot;
-					m_cam.panAngle = rot + 180;
+					_cam.panAngle = rot + 180;
 				} else {
 					m_rotate.rotationZ = -rot;
-					m_cam.panAngle = -rot + 180;
+					_cam.panAngle = -rot + 180;
 				}
-				m_cam.hover(true);
+				_cam.hover(true);
 				v.scaleBy(m_back.width / 2);
 				m_rotate.x = v.x + m_back.x;
 				m_rotate.y = v.y + m_back.y;
@@ -608,8 +629,8 @@ package {
 				}
 				m_aspect_slide_back.y = m_aspect_slide.y;
 				var shift_h:Number = m_aspect_slide.y - BUTTON_SHIFT_Y - ASPECT_SHIFT_Y; 
-				m_cam.zoom = MAX_ZOOM - ((MAX_ZOOM - MIN_ZOOM) *  shift_h) / (ASPECT_SLIDE_HEIGHT - m_aspect_slide.width);
-				m_sprite._panorama.cameraZoom(m_cam.zoom - MIN_ZOOM);
+				_cam.zoom = MAX_ZOOM - ((MAX_ZOOM - MIN_ZOOM) *  shift_h) / (ASPECT_SLIDE_HEIGHT - m_aspect_slide.width);
+				m_sprite._panorama.cameraZoom(_cam.zoom - MIN_ZOOM);
 								
 				var aspect:Number = 
 					(m_aspect_slide.y - BUTTON_SHIFT_Y - ASPECT_SHIFT_Y - 
@@ -621,11 +642,11 @@ package {
 				}
 			}
 			rotate();
-			m_cam.hover();
+			_cam.hover();
 
-			if (m_old_cam_Y != m_cam.rotationY) {
-				m_old_cam_Y == m_cam.rotationY;
-				this.dispatchEvent(new CameraEvent(CAMERA_UPDATET, m_cam));
+			if (m_old_cam_Y != _cam.rotationY) {
+				m_old_cam_Y == _cam.rotationY;
+				this.dispatchEvent(new CameraEvent(CAMERA_UPDATET, _cam));
 			}
 		}
 	}

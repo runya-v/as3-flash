@@ -13,6 +13,8 @@ package {
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
+	import flash.ui.Mouse;
+	import flash.ui.MouseCursor;
 	
 	[SWF(width="600", height="800", frameRate="60", backgroundColor="#000000")]
 	//[SWF(frameRate="60", backgroundColor="#000000")]
@@ -23,7 +25,7 @@ package {
         [Embed(source='../../buttons.swf', symbol='bt_dec')]
         private var bt_dec:Class;
         
-        [Embed(source="../Close_door.png")] 
+        [Embed(source="../lift.png")] 
         private var SrcImage:Class;
         private var m_image:Bitmap = new SrcImage();
 
@@ -46,7 +48,9 @@ package {
         
         private var _old_mouse_x:Number = 0;
         private var _old_mouse_y:Number = 0;
+        private var _mouse_dovn:Boolean = false;
 
+        
 		public function PanoramaSettings() {
 			// create a basic camera
 			m_cam = new HoverCamera3D();
@@ -67,7 +71,7 @@ package {
 
 			m_material = new BitmapMaterial(Cast.bitmap(m_image), {smooth:true, precision:20});
 		
-			m_sphere = new Sphere({alpha:.1, radius:800, segmentsH:30, segmentsW:30});
+			m_sphere = new Sphere({alpha:.1, radius:800, segmentsH:40, segmentsW:40});
 			m_sphere.material = m_material
 			m_sphere.scaleX = -1;
 			
@@ -78,40 +82,61 @@ package {
 
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
             
+            this.addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent):void {
+                Mouse.cursor = MouseCursor.HAND;
+                _mouse_dovn = true;
+            });
+            
+            this.addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent):void {
+                Mouse.cursor = MouseCursor.AUTO;
+                _mouse_dovn = false;
+                _old_mouse_x = 0;
+                _old_mouse_y = 0;
+            });
+            
+            this.addEventListener(MouseEvent.MOUSE_OVER, function(e:MouseEvent):void {
+                Mouse.cursor = MouseCursor.AUTO;
+                _mouse_dovn = false;
+                _old_mouse_x = 0;
+                _old_mouse_y = 0;
+            });
+            
             this.addEventListener(MouseEvent.MOUSE_MOVE, function(e:MouseEvent):void {
-                if (_old_mouse_x == 0) {
+                if (_mouse_dovn) {
+                    if (_old_mouse_x == 0) {
+                        _old_mouse_x = e.stageX;
+                    }
+                    
+                    if (_old_mouse_y == 0) {
+                        _old_mouse_y = e.stageY;
+                    }
+                    
+                    var shift_x:Number = e.stageX - _old_mouse_x;
+                    var shift_y:Number = e.stageY - _old_mouse_y;
+                    
+                    if (shift_x < 0) {
+                        m_cam.moveRight(-shift_x);
+                        m_cam.panAngle += shift_x;
+                    }
+                    
+                    if (shift_x > 0) {
+                        m_cam.moveLeft(shift_x);
+                        m_cam.panAngle += shift_x;
+                    }
+                    
+                    if (shift_y < 0) {
+                        m_cam.moveDown(-shift_y);
+                        m_cam.tiltAngle += shift_y
+                    }
+                    
+                    if (shift_y > 0) {
+                        m_cam.moveUp(shift_y);
+                        m_cam.tiltAngle += shift_y;
+                    }
+                    
                     _old_mouse_x = e.stageX;
-                }
-
-                if (_old_mouse_y == 0) {
                     _old_mouse_y = e.stageY;
                 }
-                
-                var shift_x:Number = e.stageX - _old_mouse_x;
-                var shift_y:Number = e.stageY - _old_mouse_y;
-
-                if (shift_x < 0) {
-                    m_cam.moveRight(-shift_x);
-                    m_cam.panAngle += shift_x;
-                }
-                
-                if (shift_x > 0) {
-                    m_cam.moveLeft(shift_x);
-                    m_cam.panAngle += shift_x;
-                }
-                
-                if (shift_y < 0) {
-                    m_cam.moveDown(-shift_y);
-                    m_cam.tiltAngle += shift_y
-                }
-                
-                if (shift_y > 0) {
-                    m_cam.moveUp(shift_y);
-                    m_cam.tiltAngle += shift_y;
-                }
-                
-                _old_mouse_x = e.stageX;
-                _old_mouse_y = e.stageY;
             });
 		}
 

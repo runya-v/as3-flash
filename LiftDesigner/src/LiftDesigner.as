@@ -23,9 +23,15 @@ package {
     import flash.ui.Mouse;
     import flash.ui.MouseCursor;
     
-    [SWF(width="540", height="720", frameRate="60", backgroundColor="#000000")]
+    [SWF(width="600", height="800", frameRate="60", backgroundColor="#000000")]
     //[SWF(frameRate="60", backgroundColor="#000000")]
     public class LiftDesigner extends Sprite {
+        [Embed(source='../../buttons.swf', symbol='bt_inc')]
+        private var bt_inc:Class;
+        
+        [Embed(source='../../buttons.swf', symbol='bt_dec')]
+        private var bt_dec:Class;
+        
         [Embed(source="../Scene.png")] 
         private var BackImage:Class;
         private var _back_image:Bitmap = new BackImage();
@@ -97,7 +103,7 @@ package {
             _cam.zoom         = 8;
             _cam.focus        = 50;
             _cam.panAngle     = 0;
-            _cam.tiltAngle    = 3;
+            _cam.tiltAngle    = 0;
             _cam.minTiltAngle = -90;
             _cam.distance     = 0.5;
             _cam.hover(true);
@@ -207,28 +213,28 @@ package {
             _colors.push(0x03); _colors.push(0x01); _colors.push(0x7f); _colors.push(color_alpha);
 
             var t_:Sprite = new Sprite;
-            t_.graphics.beginFill(0x03ff0f);
+            t_.graphics.beginFill(0x00000);
             t_.graphics.drawRect(0, 0, 200, 123);
             t_.graphics.endFill();
             _color_changer.insert(t_, 200, 123, "Выбор цвета _");
             _color_sprites.push(t_);
-            _colors.push(0x03); _colors.push(0xff); _colors.push(0x0f); _colors.push(color_alpha);
+            _colors.push(0x00); _colors.push(0x00); _colors.push(0x00); _colors.push(color_alpha);
 
             var t0:Sprite = new Sprite;
-            t0.graphics.beginFill(0xffff7f);
+            t0.graphics.beginFill(0xff0000);
             t0.graphics.drawRect(0, 0, 200, 123);
             t0.graphics.endFill();
             _color_changer.insert(t0, 200, 123, "Выбор цвета 0");
             _color_sprites.push(t0);
-            _colors.push(0xff); _colors.push(0xff); _colors.push(0x7f); _colors.push(color_alpha);
+            _colors.push(0xff); _colors.push(0x00); _colors.push(0x00); _colors.push(color_alpha);
             
             var t1:Sprite = new Sprite;
-            t1.graphics.beginFill(0xf3ff00);
+            t1.graphics.beginFill(0x00ff00);
             t1.graphics.drawRect(0, 0, 200, 123);
             t1.graphics.endFill();
             _color_changer.insert(t1, 200, 123, "Выбор цвета 1");
             _color_sprites.push(t1);
-            _colors.push(0xf3); _colors.push(0xff); _colors.push(0x00); _colors.push(color_alpha);
+            _colors.push(0x00); _colors.push(0xff); _colors.push(0x00); _colors.push(color_alpha);
             
             var t2:Sprite = new Sprite;
             t2.graphics.beginFill(0x03710f);
@@ -239,12 +245,12 @@ package {
             _colors.push(0x03); _colors.push(0x71); _colors.push(0x0f); _colors.push(color_alpha);
             
             var t3:Sprite = new Sprite;
-            t3.graphics.beginFill(0x70f717);
+            t3.graphics.beginFill(0xffff17);
             t3.graphics.drawRect(0, 0, 200, 123);
             t3.graphics.endFill();
             _color_changer.insert(t3, 200, 12, "Выбор цвета 3");
             _color_sprites.push(t3);
-            _colors.push(0x70); _colors.push(0xf7); _colors.push(0x17); _colors.push(color_alpha);
+            _colors.push(0xff); _colors.push(0xff); _colors.push(0x17); _colors.push(color_alpha);
             
             var t4:Sprite = new Sprite;
             t4.graphics.beginFill(0x700700);
@@ -255,12 +261,12 @@ package {
             _colors.push(0x70); _colors.push(0x07); _colors.push(0x00); _colors.push(color_alpha);
 
             var t5:Sprite = new Sprite;
-            t5.graphics.beginFill(0x0707ff);
+            t5.graphics.beginFill(0xffffff);
             t5.graphics.drawRect(0, 0, 200, 123);
             t5.graphics.endFill();
             _color_changer.insert(t5, 100, 102, "Выбор цвета 5");
             _color_sprites.push(t5);
-            _colors.push(0x07); _colors.push(0x07); _colors.push(0xff); _colors.push(color_alpha);
+            _colors.push(0xff); _colors.push(0xff); _colors.push(0xff); _colors.push(color_alpha);
 
             this.addChild(_color_changer);
 
@@ -273,7 +279,7 @@ package {
         }
         
         private function initConsole():void {
-            _console = new Console(20, 20, this.stage.stageWidth * 0.6, this.stage.stageHeight * 0.9);
+            _console = new Console(20, 20, this.stage.stageWidth * 0.6, this.stage.stageHeight * 0.8);
             this.addChild(_console);
             _console.visible = false;
             

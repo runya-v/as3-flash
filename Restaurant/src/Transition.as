@@ -55,7 +55,7 @@ package {
 				rotate = 90 + rotate; 
 			}
 			this.graphics.beginFill(0xbfc8c7, ALPHA);
-			this.graphics.lineStyle(1, 0x000000);
+			this.graphics.lineStyle(1, 0x5555ff);
 			this.graphics.moveTo(SUB_SHIFT, LINE_DEPTH / 2);
 			this.graphics.lineTo(SUB_SHIFT * 1.5, 0);
 			this.graphics.lineTo(SUB_SHIFT * 1.5, LINE_DEPTH / 4);

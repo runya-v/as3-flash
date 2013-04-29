@@ -12,15 +12,25 @@ package {
     
     import flash.display.Bitmap;
     import flash.display.BlendMode;
+    import flash.display.Loader;
+    import flash.display.LoaderInfo;
     import flash.display.MovieClip;
     import flash.display.Sprite;
     import flash.display.StageAlign;
     import flash.display.StageScaleMode;
     import flash.display3D.textures.Texture;
     import flash.events.Event;
+    import flash.events.IOErrorEvent;
     import flash.events.MouseEvent;
+    import flash.events.ProgressEvent;
+    import flash.events.SecurityErrorEvent;
     import flash.geom.Rectangle;
     import flash.geom.Vector3D;
+    import flash.net.URLRequest;
+    import flash.system.ApplicationDomain;
+    import flash.system.LoaderContext;
+    import flash.system.Security;
+    import flash.system.SecurityDomain;
     import flash.text.TextField;
     import flash.ui.Mouse;
     import flash.ui.MouseCursor;
@@ -28,6 +38,9 @@ package {
     [SWF(width="540", height="720", frameRate="60", backgroundColor="#000000")]
     //[SWF(frameRate="60", backgroundColor="#000000")]
     public class Lift extends Sprite {
+        [Embed(source='../../preloader.swf', symbol='loader')]
+        private var Preloader:Class;
+        
         [Embed(source='../../lift_animation.swf', symbol='lift_animation')]
         private var SrcMovie:Class;
         private var _movie_mat:MovieClip = new SrcMovie;
@@ -35,12 +48,15 @@ package {
         private static const ANIMATE_FORVARD:String = "ANIMATE_FORVARD";
         private static const ANIMATE_BACK:String = "ANIMATE_BACK";
                 
-        private static const VERSION:String = "2.2";
-        
-        public static const RADIAN:Number = 57.295779513;
+        private static const VERSION:String = "4.0";
         
         private static const BORDER:int              = 20;
         private static const COLOR_CHANGER_Y_POS:int = BORDER;
+
+        public static const RADIAN:Number = 57.295779513;
+        public static const URL:String = "http://kb-server.pollux.roger.net.ru/projects";
+        public static const URL_IMAGES:String = "http://static.vi-ex.ru/crm";
+        public static const CROSS_DATA:String = "kb-server.pollux.roger.net.ru/crossdomain.xml";
         
         public static const START_MASK_R:uint = 155;
         public static const START_MASK_G:uint = 100;
@@ -51,6 +67,9 @@ package {
         public static const START_TEXTURE_G:uint = 255;
         public static const START_TEXTURE_B:uint = 255;
         public static const START_TEXTURE_A:uint = 125;
+        
+        public static const ROTATION_X:Number = 40;
+        public static const ROTATION_Y:Number = 15;
         
         private var _material:BitmapMaterial;
         
@@ -63,7 +82,6 @@ package {
         private var _cam_y:uint;
         private var _sphere:Sphere;
         
-        private var _cam_control:CameraController;
         private var _shader:MaterialShader;
         
         private var _width:Number;
@@ -75,6 +93,9 @@ package {
         private var _old_mouse_y:Number = 0;
         private var _mouse_dovn:Boolean = false;
 
+        private var _preloader:MovieClip;
+        private var _vc:ViewController;
+            
         public function Lift() {
             if (stage) {
                 stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -93,10 +114,6 @@ package {
         private function init():void {
             this.removeEventListener(Event.ADDED_TO_STAGE, init);
             
-            _movie_mat.gotoAndStop(_movie_mat.totalFrames); 
-            _material = new MovieMaterial(_movie_mat);
-            _material.smooth = true;
-            
             // create a basic camera
             _cam = new HoverCamera3D();
             _cam.zoom         = 8;
@@ -109,24 +126,88 @@ package {
             
             _cam_x = _width / 2;
             _cam_y = _height / 2;
-            
+            trace(_cam_x + ":" + _cam_y);
             // create a viewport
             _view = new View3D({camera:_cam, x:_cam_x, y:_cam_y, renderer:Renderer.CORRECT_Z_ORDER});
             this.addChild(_view);
-            
-            _sphere = new Sphere({alpha:.1, radius:1000, segmentsH:32, segmentsW:32});
-            _sphere.scaleX = -1;
-            _sphere.rotationY = 90;
-            _sphere.material = _material; 
 
-            _view.scene.addChild(_sphere);
             _view.render();
-
-            _cam_control = new CameraController(this, _cam);
-            _cam_control.init((stage.stageWidth / 2), (stage.stageHeight /2));
             
-            initConsole();
+            _vc = new ViewController;
+            _vc.x = stage.stageWidth * 0.05;
+            _vc.y = stage.stageHeight * 0.05;
+            _vc.addEventListener(ViewController.BUT_LEFT_DOWN, function(e:Event):void {
+                _cam.panAngle -= ROTATION_X;
+            });
 
+            _vc.addEventListener(ViewController.BUT_RIGHT_DOWN, function(e:Event):void {
+                _cam.panAngle += ROTATION_X;
+            });
+
+            _vc.addEventListener(ViewController.BUT_UP_DOWN, function(e:Event):void {
+                _cam.tiltAngle -= ROTATION_Y;
+            });
+
+            _vc.addEventListener(ViewController.BUT_DOWN_DOWN, function(e:Event):void {
+                _cam.tiltAngle += ROTATION_Y;
+            });
+
+            this.addChild(_vc);
+
+            initConsole();
+            
+            _preloader = new Preloader();
+            _preloader.scaleX = 2;
+            _preloader.scaleY = 2;
+            _preloader.x = _cam_x;
+            _preloader.y = _cam_y;
+            addChild(_preloader);
+            
+            Security.loadPolicyFile(CROSS_DATA);
+            
+            var loaderContext:LoaderContext = new LoaderContext();
+            loaderContext.securityDomain = SecurityDomain.currentDomain;
+            loaderContext.checkPolicyFile = true;
+            var ldr:Loader = new Loader(); 
+            var ldrReq:URLRequest = new URLRequest(URL + "/lift_animation.swf");
+            ldr.load(ldrReq, loaderContext); 
+            this.addChild(ldr);
+            
+            ldr.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function(e:SecurityErrorEvent):void {
+                removeChild(_preloader);
+                _console.addMessage("ERR: Sequrity error by resurce loading. " + e);
+            });
+            
+            ldr.addEventListener(IOErrorEvent.IO_ERROR, function(e:IOErrorEvent):void {
+                removeChild(_preloader);
+                _console.addMessage("ERR: IO error by resurce loading. " + e);
+            });
+
+            ldr.contentLoaderInfo.addEventListener(Event.COMPLETE, function(e:Event):void {
+                _console.addMessage("Extern data is Loaded.");
+                removeChild(_preloader);
+                var loaderInfo:LoaderInfo = LoaderInfo(e.target);
+                var loadedAppDomain:ApplicationDomain = loaderInfo.applicationDomain;
+                var SymbolClass:Class = Class(loadedAppDomain.getDefinition("lift_animation"));
+                _console.addMessage(SymbolClass.toString());
+                
+                if (SymbolClass) {
+                    _console.addMessage("Init scene.");
+                    _movie_mat = MovieClip(new SymbolClass()); 
+                    _movie_mat.gotoAndStop(_movie_mat.totalFrames); 
+                    
+                    _material = new MovieMaterial(_movie_mat);
+                    _material.smooth = true;
+                    
+                    _sphere = new Sphere({alpha:.1, radius:1000, segmentsH:40, segmentsW:40});
+                    _sphere.scaleX = -1;
+                    _sphere.rotationY = 180;
+                    _sphere.material = _material;
+
+                    _view.scene.addChild(_sphere);
+                }
+            });
+            
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
             
             this.addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent):void {
@@ -162,23 +243,19 @@ package {
                     var shift_y:Number = e.stageY - _old_mouse_y;
                     
                     if (shift_x < 0) {
-                        _cam_control._cam.moveRight(-shift_x);
-                        _cam_control._cam.panAngle += shift_x;
+                        _cam.panAngle += shift_x;
                     }
                     
                     if (shift_x > 0) {
-                        _cam_control._cam.moveLeft(shift_x);
-                        _cam_control._cam.panAngle += shift_x;
+                        _cam.panAngle += shift_x;
                     }
                     
                     if (shift_y < 0) {
-                        _cam_control._cam.moveDown(-shift_y);
-                        _cam_control._cam.tiltAngle += shift_y
+                        _cam.tiltAngle += shift_y
                     }
                     
                     if (shift_y > 0) {
-                        _cam_control._cam.moveUp(shift_y);
-                        _cam_control._cam.tiltAngle += shift_y;
+                        _cam.tiltAngle += shift_y;
                     }
                     
                     _old_mouse_x = e.stageX;
@@ -239,7 +316,8 @@ package {
             if ((_width != this.stage.stageWidth) || (_height != this.stage.stageHeight)) {
                 _width = stage.stageWidth;
                 _height = stage.stageHeight;
-                _cam_control.resize(_width, _height);
+                _vc.x = stage.stageWidth * 0.02;
+                _vc.x = stage.stageHeight * 0.02;
                 _view.camera.x = _width / 2;
                 _view.camera.y = _height / 2;
                 _view.x = _width / 2;
@@ -249,12 +327,12 @@ package {
         
         private function onEnterFrame(e:Event):void {
             resize();
-            _cam_control.update();
             _view.render();
+            _cam.hover();
 
-            var v_cam:Vector3D = new Vector3D(_cam_control._cam.x, _cam_control._cam.y, _cam_control._cam.z);
+            var v_cam:Vector3D = new Vector3D(_cam.x, _cam.y, _cam.z);
             v_cam.normalize();
-            var alpha:Number = Math.acos(v_cam.dotProduct(new Vector3D(0,0,1))) * RADIAN;
+            var alpha:Number = Math.acos(v_cam.dotProduct(new Vector3D(1,0,0))) * RADIAN;
             
             if (24 > alpha) {
                 if (_movie_mat.currentFrame == _movie_mat.totalFrames) {

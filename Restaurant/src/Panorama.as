@@ -19,9 +19,9 @@ package {
 	 * @author Velichko R.N.; email:rostislav.vel@gmail.com; (c) 12.2010
 	 */
 	public class Panorama extends EventDispatcher {
-        [Embed(source="../Panorama.png")] 
-        private var DefaultImage:Class;
-        private var _default_image:Bitmap = new DefaultImage();
+        //[Embed(source="../Panorama.png")] 
+        //private var DefaultImage:Class;
+        //private var _default_image:Bitmap = new DefaultImage();
         
 		public static const COMPLETE:String = "COMPLETE";
 		public static const ERROR:String = "PANORAMA_ERROR";

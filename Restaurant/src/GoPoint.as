@@ -45,10 +45,10 @@ package {
         public static const DEL_TRANSITION:String = "DEL_TRANSITION";
 		
 		public static const CAMERA_RADIUS:Number = 70;
-		public static const NEEDLE_RADIUS:Number = 30;
+		public static const NEEDLE_RADIUS:Number = 40;
 		public static const CAM_ZOOM_DIST_CORRECTION:Number = 2000;
-		public static const HORIZONT:Number = -35;
-		public static const BACK_SHIFT:Number = 1.5;
+		public static const HORIZONT:Number = -45;
+		public static const BACK_SHIFT:Number = 2;
 		public static const Y_DIRECTION:Vector3D = new Vector3D(0, 1, 0);
 		public static const Z_DIRECTION:Vector3D = new Vector3D(0, 0, 1);
 		
@@ -140,7 +140,12 @@ package {
 			_need_vecs.push(pos_vec);
 			_needle_backs.push(plane_back);
 		}
-		
+
+        public function go(to_id:uint):void {
+            trace("to: " + to_id)
+            this.dispatchEvent(new MessageEvent(GoPoint.GO, String(to_id)));
+        }
+
 		private function onMouseOver(e:MouseEvent3D):void {
 			Mouse.cursor = MouseCursor.BUTTON;
 			MovieClip(MovieMaterial(Plane(e.target).material).movie).gotoAndStop(2);
