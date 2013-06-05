@@ -24,6 +24,7 @@ package {
     import flash.events.MouseEvent;
     import flash.events.ProgressEvent;
     import flash.events.SecurityErrorEvent;
+    import flash.events.TimerEvent;
     import flash.geom.Rectangle;
     import flash.geom.Vector3D;
     import flash.net.URLRequest;
@@ -34,6 +35,7 @@ package {
     import flash.text.TextField;
     import flash.ui.Mouse;
     import flash.ui.MouseCursor;
+    import flash.utils.Timer;
     
     [SWF(width="540", height="720", frameRate="60", backgroundColor="#000000")]
     //[SWF(frameRate="60", backgroundColor="#000000")]
@@ -41,22 +43,21 @@ package {
         [Embed(source='../../preloader.swf', symbol='loader')]
         private var Preloader:Class;
         
-        [Embed(source='../../lift_animation.swf', symbol='lift_animation')]
-        private var SrcMovie:Class;
-        private var _movie_mat:MovieClip = new SrcMovie;
+        //[Embed(source='../../lift_animation.swf', symbol='lift_animation_2048')]
+        //private var SrcMovie:Class;
+        private var _movie_mat:MovieClip;// = new SrcMovie;
         
         private static const ANIMATE_FORVARD:String = "ANIMATE_FORVARD";
         private static const ANIMATE_BACK:String = "ANIMATE_BACK";
                 
-        private static const VERSION:String = "4.0";
+        private static const VERSION:String = "4.5";
         
         private static const BORDER:int              = 20;
         private static const COLOR_CHANGER_Y_POS:int = BORDER;
 
         public static const RADIAN:Number = 57.295779513;
-        public static const URL:String = "http://kb-server.pollux.roger.net.ru/projects";
-        public static const URL_IMAGES:String = "http://static.vi-ex.ru/crm";
-        public static const CROSS_DATA:String = "kb-server.pollux.roger.net.ru/crossdomain.xml";
+        public static const URL:String = "http://www.kmzlift.ru";
+        
         
         public static const START_MASK_R:uint = 155;
         public static const START_MASK_G:uint = 100;
@@ -73,6 +74,7 @@ package {
         
         private var _material:BitmapMaterial;
         
+        private var _url:String = URL;
         private var _bt_cons:Sprite;
         private var _console:Console;
         
@@ -95,6 +97,8 @@ package {
 
         private var _preloader:MovieClip;
         private var _vc:ViewController;
+        
+        private var _auto_move_timer:Timer;
             
         public function Lift() {
             if (stage) {
@@ -103,7 +107,13 @@ package {
                 
                 _width = stage.stageWidth;
                 _height = stage.stageHeight;
-                
+
+                for (var name:String in this.loaderInfo.parameters) {
+                    if (name =="Domain") {
+                        _url = this.loaderInfo.parameters[name];
+                    }
+                }
+
                 init();
             }
             else {
@@ -126,8 +136,7 @@ package {
             
             _cam_x = _width / 2;
             _cam_y = _height / 2;
-            trace(_cam_x + ":" + _cam_y);
-            // create a viewport
+
             _view = new View3D({camera:_cam, x:_cam_x, y:_cam_y, renderer:Renderer.CORRECT_Z_ORDER});
             this.addChild(_view);
 
@@ -154,7 +163,7 @@ package {
 
             this.addChild(_vc);
 
-            initConsole();
+            //initConsole();
             
             _preloader = new Preloader();
             _preloader.scaleX = 2;
@@ -163,36 +172,33 @@ package {
             _preloader.y = _cam_y;
             addChild(_preloader);
             
-            Security.loadPolicyFile(CROSS_DATA);
+            Security.loadPolicyFile(_url + "/crossdomain.xml");
             
-            var loaderContext:LoaderContext = new LoaderContext();
-            loaderContext.securityDomain = SecurityDomain.currentDomain;
-            loaderContext.checkPolicyFile = true;
             var ldr:Loader = new Loader(); 
-            var ldrReq:URLRequest = new URLRequest(URL + "/lift_animation.swf");
-            ldr.load(ldrReq, loaderContext); 
+            var ldrReq:URLRequest = new URLRequest(_url + "/lift_animation_2048.swf");
+            ldr.load(ldrReq); 
             this.addChild(ldr);
             
             ldr.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function(e:SecurityErrorEvent):void {
                 removeChild(_preloader);
-                _console.addMessage("ERR: Sequrity error by resurce loading. " + e);
+                //_console.addMessage("ERR: Sequrity error by resurce loading. " + e);
             });
             
             ldr.addEventListener(IOErrorEvent.IO_ERROR, function(e:IOErrorEvent):void {
                 removeChild(_preloader);
-                _console.addMessage("ERR: IO error by resurce loading. " + e);
+                //_console.addMessage("ERR: IO error by resurce loading. " + e);
             });
 
             ldr.contentLoaderInfo.addEventListener(Event.COMPLETE, function(e:Event):void {
-                _console.addMessage("Extern data is Loaded.");
+                //_console.addMessage("Extern data is Loaded.");
                 removeChild(_preloader);
                 var loaderInfo:LoaderInfo = LoaderInfo(e.target);
                 var loadedAppDomain:ApplicationDomain = loaderInfo.applicationDomain;
-                var SymbolClass:Class = Class(loadedAppDomain.getDefinition("lift_animation"));
-                _console.addMessage(SymbolClass.toString());
+                var SymbolClass:Class = Class(loadedAppDomain.getDefinition("lift_animation_2048"));
+                //_console.addMessage(SymbolClass.toString());
                 
                 if (SymbolClass) {
-                    _console.addMessage("Init scene.");
+                    //_console.addMessage("Init scene.");
                     _movie_mat = MovieClip(new SymbolClass()); 
                     _movie_mat.gotoAndStop(_movie_mat.totalFrames); 
                     
@@ -205,10 +211,11 @@ package {
                     _sphere.material = _material;
 
                     _view.scene.addChild(_sphere);
+
+                    addEventListener(Event.ENTER_FRAME, onEnterFrame);
                 }
             });
             
-            addEventListener(Event.ENTER_FRAME, onEnterFrame);
             
             this.addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent):void {
                 Mouse.cursor = MouseCursor.HAND;
@@ -220,6 +227,9 @@ package {
                 _mouse_dovn = false;
                 _old_mouse_x = 0;
                 _old_mouse_y = 0;
+                
+                _auto_move_timer.start();
+                //_console.addMessage("Start horisont auto correct timer...");
             });
             
             this.addEventListener(MouseEvent.MOUSE_OVER, function(e:MouseEvent):void {
@@ -262,6 +272,15 @@ package {
                     _old_mouse_y = e.stageY;
                 }
             });
+            
+            _auto_move_timer = new Timer(3000, 1);
+            _auto_move_timer.addEventListener(TimerEvent.TIMER_COMPLETE, function(e:TimerEvent):void {
+                if (_cam.tiltAngle != 0) {
+                    _cam.tiltAngle = 0;
+                    //_console.addMessage("Horisont auto correct is complete.");
+                }
+            });
+
         }
         
         private function openDoor():void {
@@ -332,19 +351,21 @@ package {
 
             var v_cam:Vector3D = new Vector3D(_cam.x, _cam.y, _cam.z);
             v_cam.normalize();
-            var alpha:Number = Math.acos(v_cam.dotProduct(new Vector3D(1,0,0))) * RADIAN;
+            var alpha:Number = Math.acos(v_cam.dotProduct(new Vector3D(0,0,-1))) * RADIAN;
+            
+            trace("alpha: " + alpha);
             
             if (24 > alpha) {
-                if (_movie_mat.currentFrame == _movie_mat.totalFrames) {
-                    _console.addMessage("Open Door.");
-                }
-                openDoor();
+                //if (_movie_mat.currentFrame == 1) {
+                    //_console.addMessage("Close Door.");
+                //}
+                closeDoor();
             }
             else {
-                if (_movie_mat.currentFrame == 1) {
-                    _console.addMessage("Close Door.");
-                }
-                closeDoor();
+                //if (_movie_mat.currentFrame == _movie_mat.totalFrames) {
+                    //_console.addMessage("Open Door.");
+                //}
+                openDoor();
             }
         }
     }

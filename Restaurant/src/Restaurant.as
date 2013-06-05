@@ -36,7 +36,7 @@ package {
 		[Embed(source='../../preloader.swf', symbol='loader')]
 		private var preloader:Class;
 
-		public static const VERSION:String = "1.3";
+		public static const VERSION:String = "1.4";
 		
         public static const CROSS_DATA:String = "http://vi-ex.ru/crossdomain.xml";
         public static const CROSS_IMG:String  = "http://static.vi-ex.ru/crossdomain.xml";
@@ -194,6 +194,8 @@ package {
 			
 			// Инициализация элемента процесса загрузки
 			_preloader = new preloader();
+            _preloader.scaleX = 2;
+            _preloader.scaleY = 2;
 			_preloader.x = cam_x;
 			_preloader.y = cam_y;
 			this.addChild(_preloader);
@@ -226,6 +228,7 @@ package {
                 _old_mouse_x = 0;
                 _old_mouse_y = 0;
                 _auto_move_timer.start();
+                _console.addMessage("Start horisont auto correct timer...");
             });
 
             this.addEventListener(MouseEvent.MOUSE_OVER, function(e:MouseEvent):void {
@@ -277,6 +280,7 @@ package {
             _auto_move_timer.addEventListener(TimerEvent.TIMER_COMPLETE, function(e:TimerEvent):void {
                 if (_cam_control._cam.tiltAngle != 0) {
                     _cam_control._cam.tiltAngle = 0;
+                    _console.addMessage("Horisont auto correct is complete.");
                 }
             });
 		}

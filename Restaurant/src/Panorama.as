@@ -40,7 +40,7 @@ package {
 		public function Panorama(parent:Restaurant) {
 			_parent = parent;
             _sphere = new Sphere({alpha:.1, radius:1000, segmentsH:50, segmentsW:50});
-            _sphere.material = new BitmapMaterial(new BitmapData(80, 30, false, 0x7F7FFF), { smooth:true, precision:20 } );
+            _sphere.material = new BitmapMaterial(new BitmapData(80, 30, false, 0x000000), { smooth:true, precision:20 } );
             _sphere.scaleX = -1;
             _sphere.rotate(new Vector3D(0, 1, 0), -90);
             _parent._view.scene.addChild(_sphere);
